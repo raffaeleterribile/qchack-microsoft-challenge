@@ -24,7 +24,26 @@ namespace QCHack.Task3 {
     // even though they apply single-qubit gates to separate qubits. Make sure you run the test
     // on your solution to check that it passes before you submit the solution!
     operation Task3_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
-        // ...
+        // All 3 bits are equal iff inputs[0]==inputs[1] and inputs[0]==inputs[2])
+        // Two bits are equal iff their xor is 0; so the condition can be written as 
+        //      inputs[0] xor inputs[1] == 0 and inputs[0] xor inputs[2] == 0
+        // The xor of 2 qubits can be computed using CNOT
+        // We will compute the 2 xor values, flip them, then use a CCNOT gate to check if both xnor values are 1
+        // Since we need to flip the output qubit if the 3 bits are different (so the negation of what we computed), we apply a final X gate on the output
+
+        within
+        {
+            CNOT(inputs[0], inputs[1]); // inputs[0] xor inputs[1]
+            CNOT(inputs[0], inputs[2]); // inputs[0] xor inputs[2]
+            X(inputs[1]); // inputs[0] xnor inputs[1]
+            X(inputs[2]); // inputs[0] xnor inputs[2]
+        }
+        apply
+        {
+            CCNOT (inputs[1], inputs[2], output);  // flip output if (inputs[0] xnor inputs[1] == 1) and (inputs[0] xnor inputs[1] == 1)
+            X(output); //  flip output if !((inputs[0] xnor inputs[1]) and (inputs[0] xnor inputs[1]) == 1) <==)
+                       // (inputs[0] xor inputs[1] == 1 or inputs[0] xor inputs[2] ==1 )  <-==> (inputs[0] != inputs[1] or inputs[0] != inputs[2])
+        }
     }
 }
 

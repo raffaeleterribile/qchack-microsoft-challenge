@@ -1,6 +1,8 @@
 namespace QCHack.Task4 {
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Arithmetic;
+    open Microsoft.Quantum.Diagnostics;
 
     // Task 4 (12 points). f(x) = 1 if the graph edge coloring is triangle-free
     // 
@@ -43,7 +45,140 @@ namespace QCHack.Task4 {
         colorsRegister : Qubit[], 
         target : Qubit
     ) : Unit is Adj+Ctl {
-        // ...
+        // Loop over all triplets of edges; if they form a triangle, we check the coloring using the Task3_ValidTriangle oracle
+        let E = Length(edges);
+        let counterRegisterSize = GetQubitRegisterSizeForNumberOfEdges(E);
+        use counter = Qubit[counterRegisterSize];
+        
+        let counterLE = LittleEndian(counter); 
+
+        if E>=3
+        {
+            within
+            {
+                for i in 0..E-1
+                {
+                    for j in i+1..E-1
+                    {
+                        for k in j+1..E-1
+                        {
+                            if (AreEdgesATriangle([edges[i], edges[j], edges[k]]))
+                            {
+                                use marker = Qubit()
+                                {
+                                    within
+                                    {                            
+                                        Task3_ValidTriangle([colorsRegister[i], colorsRegister[j], colorsRegister[k]], marker);
+                                    }
+                                    apply
+                                    {
+                                        Controlled IncrementCounter ([marker], (counterLE));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            apply
+            {
+                use intermediaryQubits = Qubit[2]
+                {
+                    within
+                    {
+                        ControlledOnInt(0, X)(counterLE![0..1], intermediaryQubits[0]);
+                        ControlledOnInt(0, X)(counterLE![2..counterRegisterSize-1], intermediaryQubits[1]);
+                    }
+                    apply
+                    {
+                        CCNOT(intermediaryQubits[0], intermediaryQubits[1], target);
+                    }
+                }
+            }
+        }
+        else
+        {
+            X(target);
+        }
+    }
+
+    function GetQubitRegisterSizeForNumberOfEdges(E: Int): Int{
+        if E == 4
+        {
+            return 3;
+        }
+        return 4;
+    }
+
+    operation IncrementCounter(counter : LittleEndian) : Unit is Ctl+Adj
+    {
+        if (Length(counter!) >= 2)
+        {
+            Controlled IncrementCounter([counter![0]], LittleEndian(counter![1..Length(counter!)-1]));
+        }
+        X(counter![0]);
+    }
+
+    operation Task3_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
+        within
+        {
+            CNOT(inputs[0], inputs[1]);
+            CNOT(inputs[0], inputs[2]);
+            X(inputs[1]);
+            X(inputs[2]);
+        }
+        apply
+        {
+            CCNOT (inputs[1], inputs[2], output);
+        }
+    }
+
+    // This function receives a list of 3 edges (tuples of integers) and checks if they form a triangle in the graph
+    function AreEdgesATriangle(
+        edgeTriplet : (Int, Int)[]
+    ) : Bool
+    {
+        let firstVertex = FindCommonVertexForTwoEdges(edgeTriplet[0], edgeTriplet[1]);
+        let secondVertex  = FindCommonVertexForTwoEdges(edgeTriplet[0], edgeTriplet[2]);
+        let thirdVertex = FindCommonVertexForTwoEdges(edgeTriplet[1], edgeTriplet[2]);
+
+        // if at least one pair of edges doesn't have a common vertex, this is not a triangle
+        if (firstVertex == -1 or secondVertex == -1 or thirdVertex == -1)
+        {
+            return false;
+        }
+
+        // if one vertex is present in all 3 edges, this is not a triangle
+        if (firstVertex == secondVertex or firstVertex == thirdVertex or secondVertex == thirdVertex)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    // This function checks if 2 edges have a common vertex.
+    // If they do, this function returns the common vertex index
+    // If they don't, the function returns -1 (invalid vertex index)
+    function FindCommonVertexForTwoEdges(
+        firstEdge : (Int, Int), secondEdge : (Int, Int)
+    ) : Int
+    {
+        if (Fst(firstEdge) == Fst(secondEdge))
+        {
+            return Fst(firstEdge);
+        }
+        if (Fst(firstEdge) == Snd(secondEdge))
+        {
+            return Fst(firstEdge);
+        }
+        if (Snd(firstEdge) == Fst(secondEdge))
+        {
+            return Snd(firstEdge);
+        }
+        if (Snd(firstEdge) == Snd(secondEdge))
+        {
+            return Snd(firstEdge);
+        }
+        return -1;
     }
 }
-

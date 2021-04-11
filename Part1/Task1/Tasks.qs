@@ -1,7 +1,9 @@
 namespace QCHack.Task1 {
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
-
+    open Microsoft.Quantum.Arrays;
+    open Microsoft.Quantum.Arithmetic;
+    open Microsoft.Quantum.Diagnostics;
     // Task 1 (1 point). f(x) = 1 if x is divisible by 4
     //         
     // Inputs:
@@ -20,8 +22,31 @@ namespace QCHack.Task1 {
     // Example: the result of applying the oracle to a state (|001⟩ + |100⟩ + |111⟩)/√3 ⊗ |0⟩
     // will be 1/√3|001⟩ ⊗ |1⟩ + 1/√3|100⟩ ⊗ |0⟩ + 1/√3|111⟩ ⊗ |0⟩.
     //
+
+    newtype Literal = (Index: Int, Polarity: Bool);
+    newtype Term = Literal[];
+    internal function LiteralIndex(literal: Literal): Int{ return literal::Index; }
+    internal function LiteralPolarity(literal: Literal): Bool{ return literal::Polarity; }
+
+    internal operation ApplyTerm(term: Term, controls: LittleEndian, target: Qubit) : Unit is Adj+Ctl{
+        let index = Mapped(LiteralIndex, term!);
+        let polarity = Mapped(LiteralPolarity, term!);
+        let controlRegister = Subarray(index, controls!);
+        ApplyControlledOnBitString(polarity, X, controlRegister, target);
+    }
+
+    operation ApplyESOP(terms: Term[], controls: LittleEndian, target: Qubit): Unit is Adj+Ctl{
+        for term in terms{
+            ApplyTerm(term, controls, target);
+        }
+    }
     operation Task1_DivisibleByFour (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
-        // ...
+
+        // FLIP IF |00XXX>
+        let esop = [
+            Term([Literal(0, false), Literal(1, false)])
+        ];
+
+        ApplyESOP(esop, LittleEndian(inputs), output);
     }
 }
-

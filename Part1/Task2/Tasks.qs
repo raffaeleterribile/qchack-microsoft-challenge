@@ -1,6 +1,26 @@
 namespace QCHack.Task2 {
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Intrinsic;
+    open Microsoft.Quantum.Arithmetic;
+    open Microsoft.Quantum.Diagnostics;
+    open Microsoft.Quantum.Arrays;
+
+    newtype Literal = (Index: Int, Polarity: Bool);
+    newtype Term = Literal[];
+    internal function LiteralIndex(literal: Literal): Int{ return literal::Index; }
+    internal function LiteralPolarity(literal: Literal): Bool{ return literal::Polarity; }
+
+    internal operation ApplyTerm(term: Term, controls: LittleEndian, target: Qubit) : Unit is Adj+Ctl{
+        let index = Mapped(LiteralIndex, term!);
+        let polarity = Mapped(LiteralPolarity, term!);
+        ApplyControlledOnBitString(polarity, X, Subarray(index, controls!), target);
+    }
+
+    operation ApplyESOP(terms: Term[], controls: LittleEndian, target: Qubit): Unit is Adj+Ctl{
+        for term in terms{
+            ApplyTerm(term, controls, target);
+        }
+    }
 
     // Task 2 (2 points). f(x) = 1 if at least two of three input bits are different - easy version
     //
@@ -19,7 +39,14 @@ namespace QCHack.Task2 {
     // will be 1/√3|001⟩ ⊗ |1⟩ + 1/√3|110⟩ ⊗ |1⟩ + 1/√3|111⟩ ⊗ |0⟩.
     //
     operation Task2_ValidTriangle (inputs : Qubit[], output : Qubit) : Unit is Adj+Ctl {
-        // ...
+
+        // FLIP IF NOT |000> or |111>
+        let esop = [
+            Term([Literal(0, false), Literal(2, true)]),
+            Term([Literal(1, true), Literal(2, false)]),
+            Term([Literal(0, true), Literal(1, false)])
+        ];
+        ApplyESOP(esop, LittleEndian(inputs), output);
     }
 }
 
