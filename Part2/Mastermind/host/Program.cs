@@ -77,10 +77,13 @@ namespace MastermindQuantum
 
                 Console.WriteLine("Solving 4slot-4colors using Quantum computing.");
 
-                var puzzleArray = new QArray<QArray<long>>();
-                foreach (long[] condition in new List<long[]>(){answer4})
+                var puzzleArray = QArray<QArray<long>>.Create(1);
+                long i = 0;
+                foreach (long[] condition in new List<long[]>{answer4})
                 {
-                    puzzleArray.Append(new QArray<long>(condition));
+                    var newCondition = new QArray<long>(condition);
+                    puzzleArray.Modify(i, newCondition);
+                    i++;
                 }
                 var (resultFromQuantum, resultFound) = MastermindQuantum.GroversForMastermind.Run(sim, puzzleArray).Result;
                 
@@ -101,9 +104,9 @@ namespace MastermindQuantum
                 // Test solving a 4s4c Mastermind puzzle using quantum computing.
                 List<long[]> answer4 = new List<long[]>();
                 
-                answer4.Add(new long[]{1, 1, 1, 2, 2, 10});
-                answer4.Add(new long[]{1, 1, 2, 1, 2, 10});
-                answer4.Add(new long[]{1, 2, 1, 1, 2, 10});
+                answer4.Add(new long[]{1, 1, 1, 2, 2, 4});
+                answer4.Add(new long[]{1, 1, 2, 1, 2, 4});
+                answer4.Add(new long[]{1, 2, 1, 1, 2, 4});
 
                 long[] color4 = { 2, 1, 1, 1 };
 
@@ -112,10 +115,13 @@ namespace MastermindQuantum
 
                 Console.WriteLine("Solving 4slot-4colors using Quantum computing.");
 
-                var puzzleArray = new QArray<QArray<long>>();
+                var puzzleArray = QArray<QArray<long>>.Create(answer4.Count());
+                long i = 0;
                 foreach (long[] condition in answer4)
                 {
-                    puzzleArray.Append(new QArray<long>(condition));
+                    var newCondition = new QArray<long>(condition);
+                    puzzleArray.Modify(i, newCondition);
+                    i++;
                 }
                 var (resultFromQuantum, resultFound) = MastermindQuantum.GroversForMastermind.Run(sim, puzzleArray).Result;
                 
