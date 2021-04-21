@@ -81,3 +81,5 @@ Press any key to continue...
 
 Classical Computing used 109 trials !
 ```
+
+Kabir Dubey, University of Chicago; Yu Pang, Devon Chan, HKUST (2015); Fay Wong; Mihai Zsisku
