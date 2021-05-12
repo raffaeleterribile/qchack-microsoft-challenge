@@ -1,4 +1,4 @@
-﻿namespace Tests {
+﻿namespace Quantum.Kata.Mastermind {
     
     open Microsoft.Quantum.Canon;
     open Microsoft.Quantum.Arrays;
@@ -7,7 +7,6 @@
     open Microsoft.Quantum.Measurement;
     open Microsoft.Quantum.Arithmetic;
     open Microsoft.Quantum.Convert;
-    // we should write tests here for the implementation in MastermindQuantum library
 
     
     @Test("QuantumSimulator")
@@ -24,7 +23,7 @@
                         ApplyXorInPlace(actualState, LittleEndian(inputs));
                         AllowAtMostNCallsCA(0, Measure, "You are not allowed to use measurements");
                     } apply {
-                        MastermindQuantum.Task_1_1_CompareWithInteger(LittleEndian(inputs), expectedState, output);
+                        Task_1_1_CompareWithInteger(LittleEndian(inputs), expectedState, output);
                     }
 
                     // Check that the result is expected
@@ -57,7 +56,7 @@
                         ApplyXorInPlace(actualState, LittleEndian(inputs));
                         //AllowAtMostNCallsCA(0, Measure, "You are not allowed to use measurements");
                     } apply {
-                        MastermindQuantum.Task_1_3_CompareAndIncrement(expectedState, LittleEndian(inputs), LittleEndian([output]));
+                        Task_1_3_CompareAndIncrement(expectedState, LittleEndian(inputs), LittleEndian([output]));
                     }
 
                     // Check that the result is expected
@@ -91,7 +90,7 @@
                 {
                     let registers = Chunks(2, currentGuess);
                     let regLEs = Mapped(LittleEndian(_), registers);
-                    MastermindQuantum.Task_1_6_MastermindOracle(
+                    Task_1_6_MastermindOracle(
                         regLEs,
                         [[1, 0, 1, 2, 1, 4]],
                         target
@@ -114,12 +113,15 @@
             {
                 let registers = Chunks(2, currentGuess);
                 let regLEs = Mapped(LittleEndian(_), registers);
-                MastermindQuantum.Task_1_6_MastermindOracle(
+
+                // the current guess is prepared to be [0, 0, 0, 0],
+                // which doesn't satisfy the guess [0, 0, 0, 0, 0, 0] (the current guess has 4 exact matches, the condition has 0 exact matches)
+                Task_1_6_MastermindOracle(
                     regLEs,
                     [[0, 0, 0, 0, 0, 0]],
                     target
                 );
-                AssertMeasurement([PauliZ], [target], One, "Oracle replied with True when it should have said False.");
+                AssertMeasurement([PauliZ], [target], Zero, "Oracle replied with True when it should have said False.");
                 Reset(target);
                 ResetAll(currentGuess);
             }
