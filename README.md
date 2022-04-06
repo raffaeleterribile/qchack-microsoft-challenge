@@ -1,4 +1,4 @@
-# Welcome to Microsoft challenge at QCHack 2021!
+#  Welcome to Microsoft challenge at QCHack 2021!
 
 We are excited to offer this challenge to [QCHack 2021](https://www.qchack.io/) participants, and we are looking forward to the solutions you will come up with!
 
